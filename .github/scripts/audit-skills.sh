@@ -67,6 +67,12 @@ audit_skill_json() {
     const skillName = process.argv[2];
     const source = process.argv[3];
     const text = fs.readFileSync(outputPath, "utf8");
+    const previousReportPath = process.argv[4];
+    let previousAssessment = null;
+    try {
+      const previousReport = JSON.parse(fs.readFileSync(previousReportPath, "utf8"));
+      previousAssessment = (previousReport.skills || []).find((skill) => skill.name === skillName);
+    } catch {}
     const lines = text
       .split(/\r?\n/)
       .map((line) => line.replace(/[│|]/g, "").trim())
@@ -85,6 +91,22 @@ audit_skill_json() {
       }
     }
 
+    // The remote risk service is optional and may time out in CI. Preserve a
+    // prior assessment for the same source, while successful fresh results
+    // always replace it and critical results remain subject to the gate.
+    if (!assessment && previousAssessment?.hasAssessment && previousAssessment.source === source) {
+      process.stdout.write(JSON.stringify({
+        name: skillName,
+        source,
+        hasAssessment: true,
+        gen: previousAssessment.gen,
+        socket: previousAssessment.socket,
+        snyk: previousAssessment.snyk,
+        critical: previousAssessment.critical,
+      }));
+      process.exit(0);
+    }
+
     const [gen = "Unavailable", socket = "Unavailable", snyk = "Unavailable"] = assessment || [];
     const critical = [gen, socket, snyk].some((value) => /critical/i.test(value));
 
@@ -97,7 +119,7 @@ audit_skill_json() {
       snyk,
       critical,
     }));
-  ' "$output_file" "$skill_name" "$source"
+  ' "$output_file" "$skill_name" "$source" "$AUDIT_FILE"
 
   rm -rf "$temp_dir"
 }
