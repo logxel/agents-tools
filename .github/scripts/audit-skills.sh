@@ -69,7 +69,7 @@ audit_skill_json() {
     const text = fs.readFileSync(outputPath, "utf8");
     const lines = text
       .split(/\r?\n/)
-      .map((line) => line.replace(/[│]/g, "").trim())
+      .map((line) => line.replace(/[│|]/g, "").trim())
       .filter(Boolean);
 
     let assessment = null;
