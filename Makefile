@@ -1,4 +1,4 @@
-.PHONY: skills-add skills-add-command skills-audit skills-validate skills-check skills-update
+.PHONY: skills-add skills-add-command skills-audit skills-validate skills-check skills-update opencode-validate
 
 skills-add:
 	@test -n "$(SOURCE)" || (echo "SOURCE is required, e.g. make skills-add SOURCE=sveltejs/ai-tools SKILL=svelte-core-bestpractices" && exit 1)
@@ -20,3 +20,6 @@ skills-check:
 
 skills-update:
 	./.github/scripts/update-skills.sh
+
+opencode-validate:
+	./.github/scripts/validate-opencode-addon.sh

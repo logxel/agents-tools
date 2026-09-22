@@ -1,0 +1,47 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs, reports, and temporary files
+*.log
+*.tmp
+*.temp
+coverage/
+reports/
+tmp/
+temp/
+
+# JavaScript/TypeScript tooling
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.turbo/
+.cache/
+dist/
+build/
+
+# Python tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local agent/tool checkouts and runtime state
+/research/upstream/
+.opencode/cache/
+.opencode/state/
+.agents/cache/

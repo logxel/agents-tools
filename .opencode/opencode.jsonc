@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "orchestrator",
+  "agents": {
+    "explore": {
+      "disabled": false
+    },
+    "general": {
+      "disabled": false
+    }
+  },
+  "skills": [
+    "./.opencode/skills/opencode-v2-workflow"
+  ],
+  "permissions": [
+    {
+      "action": "skill",
+      "resource": "opencode-v2-workflow",
+      "effect": "allow"
+    }
+  ]
+}

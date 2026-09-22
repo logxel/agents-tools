@@ -1,0 +1,21 @@
+{
+  "mcp": {
+    "servers": {
+      "ast-grep": {
+        "type": "local",
+        "command": [
+          "uvx",
+          "--from",
+          "git+https://github.com/ast-grep/ast-grep-mcp",
+          "ast-grep-server"
+        ],
+        "cwd": ".",
+        "environment": {
+          "AST_GREP_PATH": "npx -y -p @ast-grep/cli@0.45.3 ast-grep"
+        },
+        "codemode": false,
+        "disabled": true
+      }
+    }
+  }
+}

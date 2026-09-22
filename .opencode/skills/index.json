@@ -1,0 +1,14 @@
+{
+  "skills": [
+    {
+      "name": "opencode-v2-workflow",
+      "version": "1",
+      "files": [
+        "opencode-v2-workflow.md",
+        "references/handoff-contract.md",
+        "references/plan-template.md",
+        "references/verification-matrix.md"
+      ]
+    }
+  ]
+}
