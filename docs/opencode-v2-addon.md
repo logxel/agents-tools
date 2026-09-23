@@ -7,7 +7,8 @@ agent workflow examples, but the implementation is native to OpenCode V2.
 
 ## What is included
 
-- `skills/opencode-v2-workflow/`: dated plans, bounded handoffs, wave ownership,
+- `skills/opencode-v2-workflow/`: local dated plans under
+  `.opencode/state/plans/`, bounded handoffs, wave ownership,
   failure classification, verification, and evidence.
 - `agents/orchestrator.md`: the default primary agent that automatically
   classifies work and chooses dated-plan mode.
@@ -20,7 +21,7 @@ agent workflow examples, but the implementation is native to OpenCode V2.
 - `mcp/ast-grep.jsonc`: opt-in structural-search configuration, not enabled by
   default.
 
-This is deliberately not a V2 plugin. The skill and dated plan cover the
+This is deliberately not a V2 plugin. The skill and local dated plan cover the
 useful planning and verification behavior without adding runtime hooks,
 storage, or a fragile V1 plugin port. Add a plugin only after a concrete gap
 requires transforms, events, persistent plugin storage, or a new tool.
@@ -41,8 +42,10 @@ The addon is optional policy, not missing runtime functionality. Its default
 team conventions that V2 does not enforce automatically: complexity routing,
 dated plan identity, bounded handoff fields, evidence retention, failure
 classification, acceptance gates, and a reviewer with an explicit read-only
-permission boundary. Native agents can perform this work; the addon makes the
-process repeatable and reviewable across repositories.
+permission boundary. Runtime plans live under `.opencode/state/` and should be
+ignored locally rather than committed by default. Native agents can perform
+this work; the addon makes the process repeatable and reviewable across
+repositories.
 
 Without those conventions, use native V2 directly. With them, the default
 orchestrator keeps the same primary session and decides when to create a plan;

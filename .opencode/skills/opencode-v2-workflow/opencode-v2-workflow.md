@@ -17,12 +17,17 @@ or investigations. Do not add ceremony to a trivial, single-file change.
 1. Classify the request as `TRIVIAL`, `LOW`, `MEDIUM`, or `HIGH` from the
    supplied evidence. Mark architecture, contract, migration, security,
    schema, shared-state, and irreversible changes as risk signals.
-2. For `MEDIUM` or `HIGH`, find or create `docs/plans/YYYYMMDD-<slug>.md`.
-   Use `YYYYMMDD.md` only when one active task per day is guaranteed.
-3. Give each task one owner, explicit acceptance checks, dependencies, and a
+2. For `MEDIUM` or `HIGH`, find or create
+   `.opencode/state/plans/YYYYMMDD-<slug>.md`. Use `YYYYMMDD.md` only when one
+   active task per day is guaranteed.
+3. Before creating runtime state, ensure `.opencode/state/` is ignored. Prefer
+   an existing ignore rule; otherwise add `/.opencode/state/` to the local Git
+   exclude file rather than changing a tracked `.gitignore`. Do not hide files
+   that are already tracked.
+4. Give each task one owner, explicit acceptance checks, dependencies, and a
    non-overlapping file boundary. Independent tasks may be delegated, but do
    not assume parallel execution unless the runtime reports it.
-4. Keep research and review read-only. Send delegates only the objective,
+5. Keep research and review read-only. Send delegates only the objective,
    constraints, relevant evidence, and acceptance criteria; do not dump the
    whole transcript.
 
