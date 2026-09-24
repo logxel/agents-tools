@@ -5,7 +5,7 @@
         "type": "remote",
         "url": "https://mcp.context7.com/mcp",
         "disabled": true
-      }
+      },
       "playwright": {
         "type": "local",
         "command": [
@@ -15,6 +15,11 @@
         ],
         "disabled": true
       },
+      "deepwiki": {
+        "type": "remote",
+        "url": "https://mcp.deepwiki.com/mcp",
+        "disabled": true
+      }
     }
   }
 }

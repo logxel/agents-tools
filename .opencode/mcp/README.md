@@ -21,11 +21,12 @@ before allowing rewrites. Do not put credentials in this file.
 
 ## Optional web and browser MCPs
 
-`web-research.jsonc` contains disabled templates for two complementary
+`web-research.jsonc` contains disabled templates for three complementary
 servers:
 
 - `context7`: current library and API documentation.
 - `playwright`: browser interaction and end-to-end inspection; requires Node.js.
+- `deepwiki`: documentation and Q&A for public GitHub repositories.
 
 Merge the desired entries into the active `mcp.servers` object, remove their
 `"disabled": true` field, and authenticate when prompted. Never commit API
