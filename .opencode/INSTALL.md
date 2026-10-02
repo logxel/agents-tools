@@ -30,8 +30,8 @@ it backs up the directory under
 same-named addon files, keeps unrelated files, and merges addon defaults into
 the active config without removing its comments. Existing config values take
 precedence; the backup contains the complete prior `.opencode` directory.
-Configuration merging requires Node.js or Bun; Bun is used when Node.js is
-not installed.
+Configuration merging uses Python 3 when available, with Node.js or Bun as
+fallbacks.
 
 ## 3. Use it
 

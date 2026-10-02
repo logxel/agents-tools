@@ -23,6 +23,7 @@ Usage:
 Installs the complete native addon into a project that does not already have
 an .opencode directory, or merges/upgrades the addon in an existing setup.
 Existing project configuration takes precedence and is backed up before merging.
+Configuration merging uses Python 3 when available, with Node.js or Bun as fallbacks.
 EOF
 }
 
@@ -57,12 +58,14 @@ if [[ -d "$PROJECT_DIR/.opencode" && "$PROJECT_DIR/.opencode" -ef "$ADDON_DIR" ]
   printf 'OpenCode V2 addon is already installed in %s/.opencode\n' "$PROJECT_DIR"
   exit 0
 fi
-if command -v node >/dev/null 2>&1; then
+if command -v python3 >/dev/null 2>&1; then
+  CONFIG_MERGE_RUNTIME=python3
+elif command -v node >/dev/null 2>&1; then
   CONFIG_MERGE_RUNTIME=node
 elif command -v bun >/dev/null 2>&1; then
   CONFIG_MERGE_RUNTIME=bun
 else
-  printf 'ERROR: Node.js or Bun is required to merge OpenCode configuration\n' >&2
+  printf 'ERROR: Python 3, Node.js, or Bun is required to merge OpenCode configuration\n' >&2
   exit 1
 fi
 
@@ -142,6 +145,9 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
   cp -p "$ADDON_DIR/opencode.jsonc" "$CONFIG_PATH"
 fi
 
+if [[ "$CONFIG_MERGE_RUNTIME" == "python3" ]]; then
+  python3 "$ADDON_DIR/merge-config.py" "$CONFIG_PATH" "$ADDON_DIR/opencode.jsonc" "$ENABLE_AST_GREP" "$ADDON_DIR/mcp/ast-grep.jsonc"
+else
 "$CONFIG_MERGE_RUNTIME" - "$CONFIG_PATH" "$ADDON_DIR/opencode.jsonc" "$ENABLE_AST_GREP" "$ADDON_DIR/mcp/ast-grep.jsonc" <<'NODE'
 const fs = require("fs")
 
@@ -385,6 +391,7 @@ for (const edit of edits.sort((left, right) => right.start - left.start)) {
 parseJsonc(mergedText, configPath)
 if (mergedText !== configText) fs.writeFileSync(configPath, mergedText)
 NODE
+fi
 
 if [[ "$ENABLE_AST_GREP" == 1 ]]; then
   printf 'Enabled AST-grep in %s\n' "$CONFIG_PATH"

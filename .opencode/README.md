@@ -21,33 +21,53 @@ wide install, follow the installation options documented in
 
 ## Remote installation
 
-From the project you want to configure:
+Run the command for the scope you want to install into.
+
+### Install in the current project
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --project "$PWD"
 ```
 
-Enable the tested AST-grep MCP server explicitly when needed; it asks for
-confirmation by default:
+### Install in the current project with AST-grep
+
+AST-grep asks for confirmation by default. This command enables it explicitly:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --project "$PWD" --enable-ast-grep
 ```
 
-For V1 migration, replace `--install-v2` with `--migrate-v1-to-v2`. Add
-`--yes` only for an approved non-interactive run. When `.opencode` already
-exists, the installer backs it up, refreshes same-named addon files, preserves
-unrelated files, and merges configuration defaults without replacing project
-values.
+### Migrate a V1 project and install the addon
 
-Install V2 and enable the addon user-wide instead:
+```bash
+curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --migrate-v1-to-v2 --project "$PWD"
+```
+
+### Install user-wide
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --user
 ```
 
-This preserves existing providers and MCP servers. Keep AST-grep project-scoped
-unless its `npx` dependency is intentionally accepted user-wide.
+### Install user-wide with AST-grep
+
+Use this only if you accept the AST-grep `npx` dependency for all projects:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --user --enable-ast-grep
+```
+
+### Migrate a user-wide V1 installation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --user --migrate-v1-to-v2
+```
+
+User-wide installation preserves existing providers and MCP servers. For
+non-interactive runs, add `--yes` only when the migration or installation has
+been approved. When a project already has `.opencode`, the installer backs it
+up, refreshes same-named addon files, preserves unrelated files, and merges
+configuration defaults without replacing project values.
 
 ## Optional external MCP servers
 
