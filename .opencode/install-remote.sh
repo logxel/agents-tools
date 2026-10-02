@@ -12,14 +12,6 @@ MIGRATE=0
 ENABLE_AST_GREP=0
 ASSUME_YES=0
 
-read_answer() {
-  if [[ -r /dev/tty ]]; then
-    IFS= read -r "$1" < /dev/tty
-  else
-    IFS= read -r "$1"
-  fi
-}
-
 usage() {
   cat <<'EOF'
 Usage:
@@ -100,19 +92,23 @@ fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`)
 NODE
 
 if [[ "$ENABLE_AST_GREP" == 1 ]]; then
-  if [[ "$ASSUME_YES" != 1 ]]; then
-    [[ -r /dev/tty || -t 0 ]] || { printf 'ERROR: enabling AST-grep non-interactively requires --yes\n' >&2; exit 1; }
-    printf 'Enable the AST-grep MCP server user-wide? [Y/n] '
-    read_answer answer
-    [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]] || exit 0
-  fi
   CONFIG_PATH="$CONFIG_PATH" FRAGMENT_PATH="$TEMP_DIR/.opencode/mcp/ast-grep.jsonc" node - <<'NODE'
 const fs = require("fs")
 const configPath = process.env.CONFIG_PATH
 const fragment = JSON.parse(fs.readFileSync(process.env.FRAGMENT_PATH, "utf8"))
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"))
-fragment.mcp.servers["ast-grep"].disabled = false
-config.mcp = { ...(config.mcp || {}), ...fragment.mcp }
+const servers = config.mcp?.servers || {}
+config.mcp = {
+  ...(config.mcp || {}),
+  servers: {
+    ...servers,
+    "ast-grep": {
+      ...fragment.mcp.servers["ast-grep"],
+      ...(servers["ast-grep"] || {}),
+      disabled: false,
+    },
+  },
+}
 fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
 NODE
 fi

@@ -31,7 +31,8 @@ curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/
 
 ### Install in the current project with AST-grep
 
-AST-grep asks for confirmation by default. This command enables it explicitly:
+Passing `--enable-ast-grep` is the explicit opt-in; no extra confirmation is
+prompted:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/install-remote.sh | bash -s -- --project "$PWD" --enable-ast-grep
@@ -68,6 +69,11 @@ non-interactive runs, add `--yes` only when the migration or installation has
 been approved. When a project already has `.opencode`, the installer backs it
 up, refreshes same-named addon files, preserves unrelated files, and merges
 configuration defaults without replacing project values.
+
+If OpenCode is installed in a standard user bin directory that is missing from
+your zsh or Bash `PATH`, the setup script adds those directories to `~/.zshrc`
+or `~/.bashrc`. Run `source ~/.zshrc` (or restart the shell) to use `opencode`
+immediately.
 
 ## Optional external MCP servers
 

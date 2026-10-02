@@ -9,6 +9,7 @@ ENABLE_AST_GREP=0
 INSTALL_CLAUDE=0
 TARGET_PROJECT="$PWD"
 ASSUME_YES=0
+INITIAL_PATH="$PATH"
 
 if [[ -t 1 ]]; then
   GREEN=$'\033[0;32m'
@@ -41,10 +42,10 @@ Actions:
   --install-v2          Installs OpenCode V2 only; never replaces V1.
   --migrate-v1-to-v2    Backs up and removes V1, Gem Team, and OMOS; installs V2.
   --patch-addon         Installs this repository's .opencode addon.
-  --enable-ast-grep     Enables AST-grep when installing the addon.
+  --enable-ast-grep     Explicitly enables AST-grep when installing the addon.
   --install-claude      Installs Claude CLI independently.
   --project DIR         Addon target project (default: cwd).
-  --yes                 Confirms migration, installation, and AST-grep without prompting.
+  --yes                 Confirms migration and installation without prompting.
   -h, --help            Shows this help.
 
 Claude CLI is installed only when explicitly requested.
@@ -57,6 +58,54 @@ require_command() {
 
 add_local_paths() {
   export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.bun/bin:$PATH"
+}
+
+ensure_opencode_path() {
+  local original_path="$1"
+  local binary_path binary_dir shell_name rc_file marker
+  binary_path="$(command -v opencode 2>/dev/null || true)"
+  [[ -n "$binary_path" ]] || return 0
+  binary_dir="$(dirname "$binary_path")"
+
+  case ":$original_path:" in
+    *":$binary_dir:"*) return 0 ;;
+  esac
+
+  shell_name="${SHELL:-}"
+  shell_name="${shell_name##*/}"
+  case "$shell_name" in
+    zsh) rc_file="$HOME/.zshrc" ;;
+    bash) rc_file="$HOME/.bashrc" ;;
+    *)
+      warn "OpenCode is installed at $binary_path, but $shell_name may not include its directory in PATH. Add $binary_dir to your shell startup file."
+      return 0
+      ;;
+  esac
+
+  marker="# Added by agents-tools setup-ai.sh"
+  if [[ -f "$rc_file" ]] && grep -Fqx "$marker" "$rc_file"; then
+    ok "OpenCode PATH is configured in $rc_file. Run 'source $rc_file' or restart your shell."
+    return 0
+  fi
+
+  if {
+    [[ ! -s "$rc_file" ]] || printf '\n'
+    printf '%s\n' \
+      "$marker" \
+      'for path_entry in "$HOME/.local/bin" "$HOME/.opencode/bin" "$HOME/.bun/bin"; do' \
+      '  if [[ -d "$path_entry" ]]; then' \
+      '    case ":$PATH:" in' \
+      '      *":$path_entry:"*) ;;' \
+      '      *) PATH="$path_entry:$PATH" ;;' \
+      '    esac' \
+      '  fi' \
+      'done' \
+      'export PATH'
+  } >> "$rc_file"; then
+    ok "Added OpenCode directories to $rc_file. Run 'source $rc_file' or restart your shell."
+  else
+    warn "Could not update $rc_file. Add $binary_dir to PATH in your shell startup file."
+  fi
 }
 
 is_v2_version() {
@@ -227,6 +276,7 @@ install_v2() {
   add_local_paths
   if is_v2_installed; then
     ok "OpenCode V2 is already installed: $(current_opencode_version)"
+    ensure_opencode_path "$INITIAL_PATH"
     return
   fi
 
@@ -239,6 +289,7 @@ install_v2() {
   add_local_paths
   is_v2_installed || die "Installation finished, but OpenCode V2 was not detected"
   ok "Installed OpenCode V2: $(current_opencode_version)"
+  ensure_opencode_path "$INITIAL_PATH"
 }
 
 confirm_install() {
@@ -273,16 +324,12 @@ patch_addon() {
   local project="$(cd "$TARGET_PROJECT" && pwd)"
   if [[ "$project" == "$ROOT_DIR" ]]; then
     make -C "$ROOT_DIR" opencode-validate
-    ok "El addon ya esta en este repositorio"
+    ok "The addon is already in this repository"
     return
   fi
 
   if [[ "$ENABLE_AST_GREP" == 1 ]]; then
-    if [[ "$ASSUME_YES" == 1 ]]; then
-      "$ROOT_DIR/.opencode/install.sh" --project "$project" --enable-ast-grep --yes
-    else
-      "$ROOT_DIR/.opencode/install.sh" --project "$project" --enable-ast-grep
-    fi
+    "$ROOT_DIR/.opencode/install.sh" --project "$project" --enable-ast-grep
   else
     "$ROOT_DIR/.opencode/install.sh" --project "$project"
   fi
@@ -341,7 +388,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      die "Argumento desconocido: $1 (usa --help)"
+      die "Unknown argument: $1 (use --help)"
       ;;
   esac
   shift

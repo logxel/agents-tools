@@ -5,25 +5,17 @@ set -euo pipefail
 ADDON_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=""
 ENABLE_AST_GREP=0
-ASSUME_YES=0
-
-read_answer() {
-  if [[ -r /dev/tty ]]; then
-    IFS= read -r "$1" < /dev/tty
-  else
-    IFS= read -r "$1"
-  fi
-}
 
 usage() {
   cat <<'EOF'
 Usage:
-  .opencode/install.sh --project <directory> [--enable-ast-grep] [--yes]
+  .opencode/install.sh --project <directory> [--enable-ast-grep]
 
 Installs the complete native addon into a project that does not already have
 an .opencode directory, or merges/upgrades the addon in an existing setup.
 Existing project configuration takes precedence and is backed up before merging.
 Configuration merging uses Python 3 when available, with Node.js or Bun as fallbacks.
+--yes is still accepted for compatibility; --enable-ast-grep is the opt-in.
 EOF
 }
 
@@ -38,7 +30,6 @@ while [[ $# -gt 0 ]]; do
       ENABLE_AST_GREP=1
       ;;
     --yes)
-      ASSUME_YES=1
       ;;
     *)
       usage >&2
@@ -76,21 +67,6 @@ fi
 if [[ -e "$PROJECT_DIR/.opencode" && ! -d "$PROJECT_DIR/.opencode" ]]; then
   printf 'ERROR: %s/.opencode exists but is not a directory\n' "$PROJECT_DIR" >&2
   exit 1
-fi
-
-if [[ "$ENABLE_AST_GREP" == 1 && "$ASSUME_YES" != 1 ]]; then
-  [[ -r /dev/tty || -t 0 ]] || {
-    printf 'ERROR: enabling AST-grep non-interactively requires --yes\n' >&2
-    exit 1
-  }
-  printf 'Enable the AST-grep MCP server for this project? [Y/n] '
-  read_answer answer
-  if [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]]; then
-    ENABLE_AST_GREP=1
-  else
-    ENABLE_AST_GREP=0
-    printf 'AST-grep remains disabled.\n'
-  fi
 fi
 
 if [[ ! -e "$PROJECT_DIR/.opencode" ]]; then
