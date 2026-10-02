@@ -57,10 +57,14 @@ if [[ -d "$PROJECT_DIR/.opencode" && "$PROJECT_DIR/.opencode" -ef "$ADDON_DIR" ]
   printf 'OpenCode V2 addon is already installed in %s/.opencode\n' "$PROJECT_DIR"
   exit 0
 fi
-command -v node >/dev/null 2>&1 || {
-  printf 'ERROR: Node.js is required to merge OpenCode configuration\n' >&2
+if command -v node >/dev/null 2>&1; then
+  CONFIG_MERGE_RUNTIME=node
+elif command -v bun >/dev/null 2>&1; then
+  CONFIG_MERGE_RUNTIME=bun
+else
+  printf 'ERROR: Node.js or Bun is required to merge OpenCode configuration\n' >&2
   exit 1
-}
+fi
 
 if [[ -L "$PROJECT_DIR/.opencode" ]]; then
   printf 'ERROR: refusing to merge through symlink %s/.opencode\n' "$PROJECT_DIR" >&2
@@ -138,10 +142,10 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
   cp -p "$ADDON_DIR/opencode.jsonc" "$CONFIG_PATH"
 fi
 
-node - "$CONFIG_PATH" "$ADDON_DIR/opencode.jsonc" "$ENABLE_AST_GREP" "$ADDON_DIR/mcp/ast-grep.jsonc" <<'NODE'
+"$CONFIG_MERGE_RUNTIME" - "$CONFIG_PATH" "$ADDON_DIR/opencode.jsonc" "$ENABLE_AST_GREP" "$ADDON_DIR/mcp/ast-grep.jsonc" <<'NODE'
 const fs = require("fs")
 
-const [configPath, addonConfigPath, enableAstGrep, astGrepPath] = process.argv.slice(2)
+const [configPath, addonConfigPath, enableAstGrep, astGrepPath] = process.argv.slice(-4)
 
 function parseJsonc(text, filePath) {
   let index = 0
