@@ -216,11 +216,15 @@ Use `--yes` only for an approved non-interactive run. A clean V2 install uses:
 bash setup-ai.sh --install-v2
 ```
 
-The optional `--patch-addon --project DIR` installs this repository's native
-`.opencode` bundle only when the target does not already have `.opencode`;
-existing project configuration is never overwritten. Add
-`--enable-ast-grep` to enable the tested AST-grep MCP server in that new
-project; it remains disabled by default.
+The optional `--patch-addon --project DIR` installs or upgrades this
+repository's native `.opencode` bundle. If the target already has `.opencode`,
+the installer backs it up under
+`${XDG_STATE_HOME:-~/.local/state}/agents-tools/opencode-backups/`, updates
+same-named addon files while keeping unrelated files, and merges addon
+defaults into the active config without removing its comments or overriding
+existing values. Add
+`--enable-ast-grep` to enable the tested AST-grep MCP server; it remains
+disabled by default.
 
 Run this checklist against a clean project and each supported model/provider:
 

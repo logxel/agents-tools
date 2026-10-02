@@ -88,9 +88,11 @@ opencode
 ```
 
 The project install includes the skill, default `orchestrator`, read-only
-`reviewer`, commands, permissions, and catalog. It refuses to overwrite an
-existing `.opencode` directory; merge the files manually when the project
-already has OpenCode configuration.
+`reviewer`, commands, permissions, and catalog. If the project already has an
+`.opencode` directory, the installer backs it up under
+`${XDG_STATE_HOME:-~/.local/state}/agents-tools/opencode-backups/`, refreshes
+same-named addon files, preserves unrelated files, and merges addon defaults
+into the active config without replacing project values.
 
 For a global installation, copy or symlink the addon’s `agents`, `commands`,
 and `skills` into `~/.config/opencode/{agents,commands,skills}` and merge

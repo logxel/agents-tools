@@ -33,26 +33,26 @@ read_answer() {
 
 usage() {
   cat <<'EOF'
-Uso:
+Usage:
   setup-ai.sh [--install-v2] [--patch-addon] [--enable-ast-grep] [--install-claude] [--project DIR]
   setup-ai.sh --migrate-v1-to-v2 [--yes] [--patch-addon] [--enable-ast-grep] [--install-claude] [--project DIR]
 
-Acciones:
-  --install-v2          Instala OpenCode V2 solamente; nunca reemplaza V1.
-  --migrate-v1-to-v2    Respalda y elimina V1, Gem Team y OMOS; instala V2.
-  --patch-addon         Instala el addon .opencode de este repositorio.
-  --enable-ast-grep     Activa AST-grep al instalar el addon.
-  --install-claude      Instala Claude CLI de forma independiente.
-  --project DIR         Proyecto destino del addon (por defecto: cwd).
-  --yes                 Confirma migracion, instalaciones y AST-grep sin preguntar.
-  -h, --help            Muestra esta ayuda.
+Actions:
+  --install-v2          Installs OpenCode V2 only; never replaces V1.
+  --migrate-v1-to-v2    Backs up and removes V1, Gem Team, and OMOS; installs V2.
+  --patch-addon         Installs this repository's .opencode addon.
+  --enable-ast-grep     Enables AST-grep when installing the addon.
+  --install-claude      Installs Claude CLI independently.
+  --project DIR         Addon target project (default: cwd).
+  --yes                 Confirms migration, installation, and AST-grep without prompting.
+  -h, --help            Shows this help.
 
-Claude CLI solo se instala cuando se solicita explicitamente.
+Claude CLI is installed only when explicitly requested.
 EOF
 }
 
 require_command() {
-  command -v "$1" >/dev/null 2>&1 || die "Falta el comando requerido: $1"
+  command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
 }
 
 add_local_paths() {
@@ -99,7 +99,7 @@ backup_v1_state() {
     fi
   done
 
-  ok "Respaldo creado en $backup_root"
+  ok "Backup created at $backup_root"
 }
 
 uninstall_legacy_gem_team() {
@@ -116,7 +116,7 @@ uninstall_legacy_gem_team() {
   done
 
   rm -rf "$PWD/apm_modules/mubaidr/gem-team"
-  ok "Artefactos de Gem Team eliminados (si existian)"
+  ok "Removed Gem Team artifacts, if present"
 }
 
 uninstall_legacy_omos() {
@@ -195,7 +195,7 @@ PY
   )
 
   rm -rf "$HOME/.config/opencode/oh-my-opencode" "$HOME/.config/opencode/oh-my-opencode-slim"
-  ok "OMOS eliminado de la configuracion (si estaba presente)"
+  ok "Removed OMOS from configuration, if present"
 }
 
 uninstall_v1_opencode() {
@@ -204,9 +204,9 @@ uninstall_v1_opencode() {
   binary="$(command -v opencode 2>/dev/null || true)"
 
   if [[ -z "$binary" ]]; then
-    ok "No se encontro OpenCode V1 instalado"
+    ok "OpenCode V1 installation not found"
   elif is_v2_installed; then
-    ok "OpenCode V2 ya estaba instalado; no se elimina"
+    ok "OpenCode V2 is already installed; leaving it in place"
   else
     local resolved="$(readlink -f "$binary" 2>/dev/null || printf '%s' "$binary")"
     if [[ "$resolved" == *"/.bun/install/global"* ]] && command -v bun >/dev/null 2>&1; then
@@ -217,55 +217,55 @@ uninstall_v1_opencode() {
     rm -f "$HOME/.opencode/bin/opencode"
     hash -r 2>/dev/null || true
     if command -v opencode >/dev/null 2>&1 && ! is_v2_installed; then
-      die "No se pudo eliminar OpenCode V1: $(current_opencode_version)"
+      die "Could not remove OpenCode V1: $(current_opencode_version)"
     fi
-    ok "OpenCode V1 eliminado"
+    ok "Removed OpenCode V1"
   fi
 }
 
 install_v2() {
   add_local_paths
   if is_v2_installed; then
-    ok "OpenCode V2 ya instalado: $(current_opencode_version)"
+    ok "OpenCode V2 is already installed: $(current_opencode_version)"
     return
   fi
 
   if command -v opencode >/dev/null 2>&1; then
-    die "Se detecto $(current_opencode_version). Usa --migrate-v1-to-v2 para reemplazar V1."
+    die "Detected $(current_opencode_version). Use --migrate-v1-to-v2 to replace V1."
   fi
 
-  ok "Instalando OpenCode V2 desde el instalador oficial"
+  ok "Installing OpenCode V2 with the official installer"
   CI=true curl -fsSL https://opencode.ai/v2/install | bash
   add_local_paths
-  is_v2_installed || die "La instalacion termino, pero no se detecto OpenCode V2"
-  ok "OpenCode V2 instalado: $(current_opencode_version)"
+  is_v2_installed || die "Installation finished, but OpenCode V2 was not detected"
+  ok "Installed OpenCode V2: $(current_opencode_version)"
 }
 
 confirm_install() {
   [[ "$ASSUME_YES" == 1 ]] && return
-  [[ -r /dev/tty || -t 0 ]] || die "La instalacion no interactiva requiere --yes"
-  printf 'Se instalara OpenCode V2 desde el instalador oficial. Continuar? [Y/n] '
+  [[ -r /dev/tty || -t 0 ]] || die "Non-interactive installation requires --yes"
+  printf 'OpenCode V2 will be installed with the official installer. Continue? [Y/n] '
   read_answer answer
-  [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]] || die "Instalacion cancelada"
+  [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]] || die "Installation cancelled"
 }
 
 install_claude() {
   if command -v claude >/dev/null 2>&1; then
-    ok "Claude CLI ya instalado ($(claude --version 2>&1))"
+    ok "Claude CLI is already installed ($(claude --version 2>&1))"
     return 0
   fi
 
   echo ""
-  echo "  -- Instalando Claude CLI --"
+  echo "  -- Installing Claude CLI --"
   if curl -fsSL https://claude.ai/install.sh | bash; then
     add_local_paths
     if command -v claude >/dev/null 2>&1; then
-      ok "Claude CLI instalado ($(claude --version 2>&1))"
+      ok "Installed Claude CLI ($(claude --version 2>&1))"
     else
-      die "Claude CLI instalado pero no encontrado en PATH. Prueba reiniciar tu shell o agregar ~/.local/bin a PATH."
+      die "Claude CLI was installed but not found in PATH. Restart your shell or add ~/.local/bin to PATH."
     fi
   else
-    die "Error al instalar Claude CLI. Intenta manualmente: curl -fsSL https://claude.ai/install.sh | bash"
+    die "Claude CLI installation failed. Try manually: curl -fsSL https://claude.ai/install.sh | bash"
   fi
 }
 
@@ -277,10 +277,6 @@ patch_addon() {
     return
   fi
 
-  if [[ -e "$project/.opencode" ]]; then
-    die "El proyecto ya tiene .opencode; no se sobrescribe. Fusiona los archivos desde $ROOT_DIR/.opencode"
-  fi
-
   if [[ "$ENABLE_AST_GREP" == 1 ]]; then
     if [[ "$ASSUME_YES" == 1 ]]; then
       "$ROOT_DIR/.opencode/install.sh" --project "$project" --enable-ast-grep --yes
@@ -290,15 +286,15 @@ patch_addon() {
   else
     "$ROOT_DIR/.opencode/install.sh" --project "$project"
   fi
-  ok "Addon V2 instalado en $project/.opencode"
+  ok "OpenCode V2 addon installed in $project/.opencode"
 }
 
 confirm_migration() {
   [[ "$ASSUME_YES" == 1 ]] && return
-  [[ -r /dev/tty || -t 0 ]] || die "La migracion no interactiva requiere --yes"
-  printf 'Se eliminara V1, Gem Team y OMOS despues de crear un respaldo. Continuar? [Y/n] '
+  [[ -r /dev/tty || -t 0 ]] || die "Non-interactive migration requires --yes"
+  printf 'V1, Gem Team, and OMOS will be removed after creating a backup. Continue? [Y/n] '
   read_answer answer
-  [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]] || die "Migracion cancelada"
+  [[ -z "$answer" || "$answer" == "y" || "$answer" == "Y" || "$answer" == "yes" ]] || die "Migration cancelled"
 }
 
 migrate() {
@@ -333,7 +329,7 @@ while [[ $# -gt 0 ]]; do
       INSTALL_CLAUDE=1
       ;;
     --project)
-      [[ $# -ge 2 ]] || die "--project requiere un directorio"
+      [[ $# -ge 2 ]] || die "--project requires a directory"
       TARGET_PROJECT="$2"
       shift
       ;;

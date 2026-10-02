@@ -35,8 +35,10 @@ curl -fsSL https://raw.githubusercontent.com/logxel/agents-tools/main/.opencode/
 ```
 
 For V1 migration, replace `--install-v2` with `--migrate-v1-to-v2`. Add
-`--yes` only for an approved non-interactive run. The installer never
-overwrites an existing `.opencode` directory.
+`--yes` only for an approved non-interactive run. When `.opencode` already
+exists, the installer backs it up, refreshes same-named addon files, preserves
+unrelated files, and merges configuration defaults without replacing project
+values.
 
 Install V2 and enable the addon user-wide instead:
 

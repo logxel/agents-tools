@@ -24,8 +24,12 @@ opencode
 
 The installer copies the complete `.opencode` directory, including the
 default `orchestrator`, read-only `reviewer`, workflow skill, commands,
-permissions, and optional MCP configuration. It refuses to overwrite an
-existing `.opencode` directory.
+permissions, and optional MCP configuration. If `.opencode` already exists,
+it backs up the directory under
+`${XDG_STATE_HOME:-~/.local/state}/agents-tools/opencode-backups/`, updates
+same-named addon files, keeps unrelated files, and merges addon defaults into
+the active config without removing its comments. Existing config values take
+precedence; the backup contains the complete prior `.opencode` directory.
 
 ## 3. Use it
 
@@ -36,9 +40,6 @@ also invoke the commands directly:
 /work migrate the authentication boundary
 /review the current changes for regressions and missing evidence
 ```
-
-For a project that already has `.opencode`, merge the addon files manually.
-The repository-level guide is [`docs/opencode-v2-addon.md`](../docs/opencode-v2-addon.md).
 
 To enable the optional AST-grep MCP server during installation, pass
 `--enable-ast-grep` to `.opencode/install.sh`. The default installation keeps
