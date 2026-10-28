@@ -186,7 +186,29 @@ def merge_config(config_path: str, addon_path: str, enable_ast_grep: bool, ast_g
             raise ValueError(f"{config_path}: agents must be an object to merge the addon")
         add_object_entries(agents.value, list(addon["agents"].items()))
 
-    for name in ("skills", "permissions"):
+    skills = get_property(config_root, "skills")
+    if skills is not None and skills.value.kind == "array":
+        node = skills.value
+        keep = [to_value(item) != "./.opencode/skills/opencode-v2-workflow" for item in node.items]
+        if not all(keep):
+            import re
+
+            array = config_text[node.start:node.end]
+            removals = []
+            for index, item in enumerate(node.items):
+                if not keep[index]:
+                    removals.append((item.start - node.start, item.end - node.start))
+                end = node.items[index + 1].start if index + 1 < len(node.items) else node.end - 1
+                trivia = config_text[item.end:end]
+                match = re.match(r"(?:\s|//[^\n]*(?:\n|$)|/\*[\s\S]*?\*/)*(,)", trivia)
+                if match and (not keep[index] or (index + 1 < len(keep) and not any(keep[index + 1:]))):
+                    pos = item.end + match.end() - 1 - node.start
+                    removals.append((pos, pos + 1))
+            for start, end in sorted(removals, reverse=True):
+                array = array[:start] + array[end:]
+            replacements.append((node.start, node.end, array))
+
+    for name in ("permissions",):
         entry = get_property(config_root, name)
         if entry is None:
             add_object_entries(config_root, [(name, addon[name])])

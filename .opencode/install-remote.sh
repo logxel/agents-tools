@@ -67,50 +67,6 @@ if [[ "$MODE" == "project" ]]; then
 fi
 
 bash "$TEMP_DIR/setup-ai.sh" "${SETUP_ARGS[@]}"
-GLOBAL_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
-mkdir -p "$GLOBAL_DIR/agents" "$GLOBAL_DIR/commands" "$GLOBAL_DIR/skills"
-cp -R "$TEMP_DIR/.opencode/agents/." "$GLOBAL_DIR/agents/"
-cp -R "$TEMP_DIR/.opencode/commands/." "$GLOBAL_DIR/commands/"
-cp -R "$TEMP_DIR/.opencode/skills/." "$GLOBAL_DIR/skills/"
-
-CONFIG_PATH="$GLOBAL_DIR/opencode.json"
-if [[ ! -f "$CONFIG_PATH" && -f "$GLOBAL_DIR/opencode.jsonc" ]]; then
-  CONFIG_PATH="$GLOBAL_DIR/opencode.jsonc"
-fi
-CONFIG_PATH="$CONFIG_PATH" node - <<'NODE'
-const fs = require("fs")
-const path = process.env.CONFIG_PATH
-const config = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, "utf8")) : {}
-config.default_agent = "orchestrator"
-config.permissions = [
-  ...(config.permissions || []).filter(
-    (item) => !(item.action === "skill" && item.resource === "opencode-v2-workflow"),
-  ),
-  { action: "skill", resource: "opencode-v2-workflow", effect: "allow" },
-]
-fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`)
-NODE
-
-if [[ "$ENABLE_AST_GREP" == 1 ]]; then
-  CONFIG_PATH="$CONFIG_PATH" FRAGMENT_PATH="$TEMP_DIR/.opencode/mcp/ast-grep.jsonc" node - <<'NODE'
-const fs = require("fs")
-const configPath = process.env.CONFIG_PATH
-const fragment = JSON.parse(fs.readFileSync(process.env.FRAGMENT_PATH, "utf8"))
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"))
-const servers = config.mcp?.servers || {}
-config.mcp = {
-  ...(config.mcp || {}),
-  servers: {
-    ...servers,
-    "ast-grep": {
-      ...fragment.mcp.servers["ast-grep"],
-      ...(servers["ast-grep"] || {}),
-      disabled: false,
-    },
-  },
-}
-fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
-NODE
-fi
-
-printf 'Installed OpenCode V2 addon user-wide in %s\n' "$GLOBAL_DIR"
+INSTALL_ARGS=(--user)
+[[ "$ENABLE_AST_GREP" == 1 ]] && INSTALL_ARGS+=(--enable-ast-grep)
+bash "$TEMP_DIR/.opencode/install.sh" "${INSTALL_ARGS[@]}"

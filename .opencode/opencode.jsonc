@@ -9,9 +9,6 @@
       "disabled": false
     }
   },
-  "skills": [
-    "./.opencode/skills/opencode-v2-workflow"
-  ],
   "permissions": [
     {
       "action": "skill",

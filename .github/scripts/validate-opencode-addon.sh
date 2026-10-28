@@ -34,7 +34,7 @@ readJson(".opencode/mcp/web-research.jsonc")
 const catalog = readJson(".opencode/skills/index.json")
 if (!Array.isArray(catalog.skills)) throw new Error("catalog skills must be an array")
 
-const frontmatter = (filePath) => {
+const frontmatter = (filePath, requireName = false) => {
   const text = fs.readFileSync(filePath, "utf8")
   if (!text.startsWith("---\n")) throw new Error(`${filePath}: missing frontmatter`)
   const end = text.indexOf("\n---\n", 4)
@@ -44,8 +44,8 @@ const frontmatter = (filePath) => {
     const separator = line.indexOf(":")
     return separator < 0 ? [line, ""] : [line.slice(0, separator), line.slice(separator + 1).trim()]
   }))
-  if (!fields.get("name") || !fields.get("description")) {
-    throw new Error(`${filePath}: name and description are required`)
+  if (!fields.get("description") || (requireName && !fields.get("name"))) {
+    throw new Error(`${filePath}: description and, for skills, name are required`)
   }
   return fields
 }
@@ -55,8 +55,8 @@ for (const entry of catalog.skills) {
     throw new Error(`invalid catalog skill name: ${entry.name}`)
   }
   if (!String(entry.version)) throw new Error(`${entry.name}: missing catalog version`)
-  if (!Array.isArray(entry.files) || !entry.files.includes(`${entry.name}.md`)) {
-    throw new Error(`${entry.name}: catalog must include its named Markdown entry`)
+  if (!Array.isArray(entry.files) || !entry.files.includes("SKILL.md")) {
+    throw new Error(`${entry.name}: catalog must include SKILL.md for local discovery`)
   }
   const skillRoot = path.join(addon, "skills", entry.name)
   for (const relativePath of entry.files) {
@@ -66,8 +66,8 @@ for (const entry of catalog.skills) {
     const filePath = path.join(skillRoot, relativePath)
     if (!fs.statSync(filePath).isFile()) throw new Error(`${entry.name}: missing ${relativePath}`)
   }
-  const entryFile = path.join(skillRoot, `${entry.name}.md`)
-  const fields = frontmatter(entryFile)
+  const entryFile = path.join(skillRoot, "SKILL.md")
+  const fields = frontmatter(entryFile, true)
   if (fields.get("name") !== entry.name) {
     throw new Error(`${entry.name}: frontmatter name does not match catalog ID`)
   }

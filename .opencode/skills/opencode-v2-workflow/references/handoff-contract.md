@@ -23,7 +23,7 @@ The delegate returns a compact result:
 ```yaml
 status: completed
 changed_files:
-  - .opencode/skills/opencode-v2-workflow/opencode-v2-workflow.md
+  - .opencode/skills/opencode-v2-workflow/SKILL.md
 evidence:
   - make skills-validate
 risks: []

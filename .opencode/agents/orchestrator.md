@@ -25,7 +25,11 @@ For every request:
 1. Classify complexity and risk from the supplied request and evidence.
 2. Handle trivial and low-risk work directly when it is bounded.
 3. For medium or high-risk work, create or resume the dated plan before
-   editing files. Use the plan artifact as the planning mechanism; do not
+   editing files, using `.opencode/state/plans/` at the Git worktree root.
+   Load the workflow skill and use its plan preparation helper before creating
+   the plan; if the skill or helper cannot be loaded, report that and do not
+   create a plan in another location. Use the plan artifact as the planning
+   mechanism; do not
    switch to the built-in `plan` agent unless the user explicitly requests a
    planning-only session.
 4. Use `explore` for read-only repository discovery, `websearch` and `webfetch`

@@ -4,12 +4,14 @@ set -euo pipefail
 
 ADDON_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=""
+USER_MODE=0
 ENABLE_AST_GREP=0
 
 usage() {
   cat <<'EOF'
 Usage:
   .opencode/install.sh --project <directory> [--enable-ast-grep]
+  .opencode/install.sh --user [--enable-ast-grep]
 
 Installs the complete native addon into a project that does not already have
 an .opencode directory, or merges/upgrades the addon in an existing setup.
@@ -26,6 +28,9 @@ while [[ $# -gt 0 ]]; do
       PROJECT_DIR="$2"
       shift
       ;;
+    --user)
+      USER_MODE=1
+      ;;
     --enable-ast-grep)
       ENABLE_AST_GREP=1
       ;;
@@ -39,14 +44,21 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-[[ -n "$PROJECT_DIR" ]] || { usage >&2; exit 1; }
-PROJECT_DIR=$(cd "$PROJECT_DIR" 2>/dev/null && pwd) || {
-  printf 'ERROR: project directory does not exist: %s\n' "$PROJECT_DIR" >&2
-  exit 1
-}
+if [[ "$USER_MODE" == 1 ]]; then
+  [[ -z "$PROJECT_DIR" ]] || { usage >&2; exit 1; }
+  TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+  mkdir -p "$(dirname "$TARGET_DIR")"
+else
+  [[ -n "$PROJECT_DIR" ]] || { usage >&2; exit 1; }
+  PROJECT_DIR=$(cd "$PROJECT_DIR" 2>/dev/null && pwd) || {
+    printf 'ERROR: project directory does not exist: %s\n' "$PROJECT_DIR" >&2
+    exit 1
+  }
+  TARGET_DIR="$PROJECT_DIR/.opencode"
+fi
 
-if [[ -d "$PROJECT_DIR/.opencode" && "$PROJECT_DIR/.opencode" -ef "$ADDON_DIR" ]]; then
-  printf 'OpenCode V2 addon is already installed in %s/.opencode\n' "$PROJECT_DIR"
+if [[ -d "$TARGET_DIR" && "$TARGET_DIR" -ef "$ADDON_DIR" ]]; then
+  printf 'OpenCode V2 addon is already installed in %s\n' "$TARGET_DIR"
   exit 0
 fi
 if command -v python3 >/dev/null 2>&1; then
@@ -60,31 +72,31 @@ else
   exit 1
 fi
 
-if [[ -L "$PROJECT_DIR/.opencode" ]]; then
-  printf 'ERROR: refusing to merge through symlink %s/.opencode\n' "$PROJECT_DIR" >&2
+if [[ -L "$TARGET_DIR" ]]; then
+  printf 'ERROR: refusing to merge through symlink %s\n' "$TARGET_DIR" >&2
   exit 1
 fi
-if [[ -e "$PROJECT_DIR/.opencode" && ! -d "$PROJECT_DIR/.opencode" ]]; then
-  printf 'ERROR: %s/.opencode exists but is not a directory\n' "$PROJECT_DIR" >&2
+if [[ -e "$TARGET_DIR" && ! -d "$TARGET_DIR" ]]; then
+  printf 'ERROR: %s exists but is not a directory\n' "$TARGET_DIR" >&2
   exit 1
 fi
 
-if [[ ! -e "$PROJECT_DIR/.opencode" ]]; then
-  cp -R "$ADDON_DIR" "$PROJECT_DIR/.opencode"
+if [[ ! -e "$TARGET_DIR" ]]; then
+  cp -R "$ADDON_DIR" "$TARGET_DIR"
 else
   STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
   BACKUP_PARENT="$STATE_HOME/agents-tools/opencode-backups"
   mkdir -p "$BACKUP_PARENT"
-  BACKUP_DIR=$(mktemp -d "$BACKUP_PARENT/$(basename "$PROJECT_DIR")-XXXXXXXX")
-  cp -a "$PROJECT_DIR/.opencode" "$BACKUP_DIR/.opencode"
+  BACKUP_DIR=$(mktemp -d "$BACKUP_PARENT/$(basename "$TARGET_DIR")-XXXXXXXX")
+  cp -a "$TARGET_DIR" "$BACKUP_DIR/.opencode"
   printf 'Backed up existing configuration to %s/.opencode\n' "$BACKUP_DIR"
 
   while IFS= read -r -d '' source_file; do
     relative_path="${source_file#"$ADDON_DIR"/}"
     [[ "$relative_path" == "opencode.jsonc" ]] && continue
 
-    destination="$PROJECT_DIR/.opencode/$relative_path"
-    parent="$PROJECT_DIR/.opencode"
+    destination="$TARGET_DIR/$relative_path"
+    parent="$TARGET_DIR"
     relative_parent=$(dirname "$relative_path")
     if [[ "$relative_parent" != "." ]]; then
       IFS='/' read -r -a parent_parts <<< "$relative_parent"
@@ -113,14 +125,26 @@ else
   done < <(find "$ADDON_DIR" -type f -print0)
 fi
 
-CONFIG_PATH="$PROJECT_DIR/.opencode/opencode.jsonc"
-if [[ -f "$PROJECT_DIR/.opencode/opencode.json" ]]; then
-  CONFIG_PATH="$PROJECT_DIR/.opencode/opencode.json"
+# The complete old directory is backed up above before retiring this old entry.
+OLD_SKILL="$TARGET_DIR/skills/opencode-v2-workflow/opencode-v2-workflow.md"
+if [[ -L "$OLD_SKILL" ]]; then
+  printf 'ERROR: refusing to remove symlink %s\n' "$OLD_SKILL" >&2
+  exit 1
 fi
-if [[ ! -f "$CONFIG_PATH" ]]; then
-  cp -p "$ADDON_DIR/opencode.jsonc" "$CONFIG_PATH"
+if [[ -f "$OLD_SKILL" ]]; then
+  rm -- "$OLD_SKILL"
 fi
 
+CONFIG_PATHS=()
+for candidate in "$TARGET_DIR/opencode.jsonc" "$TARGET_DIR/opencode.json"; do
+  [[ -f "$candidate" ]] && CONFIG_PATHS+=("$candidate")
+done
+if [[ ${#CONFIG_PATHS[@]} -eq 0 ]]; then
+  CONFIG_PATHS=("$TARGET_DIR/opencode.jsonc")
+  cp -p "$ADDON_DIR/opencode.jsonc" "${CONFIG_PATHS[0]}"
+fi
+
+for CONFIG_PATH in "${CONFIG_PATHS[@]}"; do
 if [[ "$CONFIG_MERGE_RUNTIME" == "python3" ]]; then
   python3 "$ADDON_DIR/merge-config.py" "$CONFIG_PATH" "$ADDON_DIR/opencode.jsonc" "$ENABLE_AST_GREP" "$ADDON_DIR/mcp/ast-grep.jsonc"
 else
@@ -283,7 +307,32 @@ if (!agentsProperty) {
   addObjectEntries(agentsProperty.value, Object.entries(addon.agents ?? {}))
 }
 
-for (const field of ["skills", "permissions"]) {
+// Remove the obsolete addon source while retaining comments and other sources.
+const oldSkills = property(configRoot, "skills")?.value
+if (oldSkills?.type === "array") {
+  const obsolete = "./.opencode/skills/opencode-v2-workflow"
+  const keep = oldSkills.items.map((item) => toValue(item) !== obsolete)
+  if (keep.some((value) => !value)) {
+    let array = configText.slice(oldSkills.start, oldSkills.end)
+    const removals = []
+    for (let i = 0; i < oldSkills.items.length; i++) {
+      const item = oldSkills.items[i]
+      if (!keep[i]) removals.push([item.start - oldSkills.start, item.end - oldSkills.start])
+      const next = oldSkills.items[i + 1]
+      const end = next ? next.start : oldSkills.end - 1
+      const trivia = configText.slice(item.end, end)
+      const comma = trivia.match(/^(?:\s|\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*(,)/)
+      if (comma && (!keep[i] || (next && !keep.slice(i + 1).some(Boolean)))) {
+        const pos = item.end + comma[0].length - 1 - oldSkills.start
+        removals.push([pos, pos + 1])
+      }
+    }
+    for (const [start, end] of removals.sort((a, b) => b[0] - a[0])) array = array.slice(0, start) + array.slice(end)
+    replacements.push({ start: oldSkills.start, end: oldSkills.end, text: array })
+  }
+}
+
+for (const field of ["permissions"]) {
   const fieldProperty = property(configRoot, field)
   if (!fieldProperty) {
     addObjectEntries(configRoot, [[field, addon[field] ?? []]])
@@ -368,8 +417,9 @@ parseJsonc(mergedText, configPath)
 if (mergedText !== configText) fs.writeFileSync(configPath, mergedText)
 NODE
 fi
+done
 
 if [[ "$ENABLE_AST_GREP" == 1 ]]; then
-  printf 'Enabled AST-grep in %s\n' "$CONFIG_PATH"
+  printf 'Enabled AST-grep in merged OpenCode configuration\n'
 fi
-printf 'OpenCode V2 addon installed or updated in %s/.opencode\n' "$PROJECT_DIR"
+printf 'OpenCode V2 addon installed or updated in %s\n' "$TARGET_DIR"

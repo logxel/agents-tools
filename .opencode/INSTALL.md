@@ -30,8 +30,10 @@ it backs up the directory under
 same-named addon files, keeps unrelated files, and merges addon defaults into
 the active config without removing its comments. Existing config values take
 precedence; the backup contains the complete prior `.opencode` directory.
-Configuration merging uses Python 3 when available, with Node.js or Bun as
-fallbacks.
+The upgrade also retires the old workflow entry file and obsolete explicit
+project skill path; the backup retains the previous contents. Configuration
+merging uses Python 3 when available, with Node.js or Bun as fallbacks. For a
+global install or upgrade, run `bash .opencode/install.sh --user`.
 
 ## 3. Use it
 

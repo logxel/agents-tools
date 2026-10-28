@@ -43,7 +43,10 @@ team conventions that V2 does not enforce automatically: complexity routing,
 dated plan identity, bounded handoff fields, evidence retention, failure
 classification, acceptance gates, and a reviewer with an explicit read-only
 permission boundary. Runtime plans live under `.opencode/state/` and should be
-ignored locally rather than committed by default. Native agents can perform
+ignored locally rather than committed by default. The workflow uses its
+`prepare-plan.sh` helper to resolve the Git worktree root and verify the plan
+path is ignored before writing. If preparation fails, it stops rather than
+choosing another location. Native agents can perform
 this work; the addon makes the process repeatable and reviewable across
 repositories.
 
@@ -94,10 +97,14 @@ The project install includes the skill, default `orchestrator`, read-only
 same-named addon files, preserves unrelated files, and merges addon defaults
 into the active config without replacing project values.
 
-For a global installation, copy or symlink the addon’s `agents`, `commands`,
-and `skills` into `~/.config/opencode/{agents,commands,skills}` and merge
-`"default_agent": "orchestrator"` plus the addon’s skill permission into the
-existing global `opencode.jsonc`. Do not replace an existing global config.
+For a global installation from a checkout, run:
+
+```bash
+bash .opencode/install.sh --user
+```
+
+The installer backs up an existing configuration, refreshes addon files, and
+preserves unrelated settings. Restart or reload OpenCode after upgrading.
 
 OpenCode V2 also supports an HTTP skill catalog. After this repository version
 is published, the catalog can be referenced directly:
@@ -116,6 +123,28 @@ the downloaded skill files change. The HTTP catalog distributes only the
 workflow skill. It does not distribute the custom agents, commands, default
 agent, permissions, or MCP snippet, so use the project installer for the full
 addon.
+
+## Troubleshooting skill and model selection
+
+The workflow is discovered automatically from
+`.opencode/skills/opencode-v2-workflow/SKILL.md`; no explicit `skills` path is
+needed. Use `@opencode-v2-workflow` to request it. Rerun the installer for
+existing project and global installations to back up the prior directory,
+remove the obsolete named entry file and its old explicit project source, and
+install the current workflow. Check the backup for local customizations, then
+reload OpenCode. Check other skill sources for duplicate IDs and later
+permission rules if the skill still fails to load. The V2 skill catalog may
+initially be empty while the server starts; allow initialization to complete
+before checking discovery again.
+
+The addon does not configure models for `orchestrator`, `general`, `explore`,
+`reviewer`, or its commands. V2 documents that a subagent inherits the parent
+session model unless the agent has its own model; a command model can also
+override it. Check global and project configuration, agent and command
+frontmatter, and the active session model when investigating a mismatch.
+Existing child sessions can retain their own selection. Verify the actual child
+session model after spawning; this convention cannot enforce runtime behavior
+or rule out an OpenCode bug.
 
 ## Optional AST-grep
 

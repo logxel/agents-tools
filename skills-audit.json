@@ -2,8 +2,8 @@
   "version": 1,
   "skills": [
     {"name":"premium-frontend-ui","source":"github/awesome-copilot","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Low Risk","critical":false},
-    {"name":"surrealdb-expert","source":"martinholovsky/claude-skills-generator","hasAssessment":true,"gen":"Safe","socket":"1 alert","snyk":"High Risk","critical":false},
-    {"name":"svelte-code-writer","source":"sveltejs/ai-tools","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Med Risk","critical":false},
+    {"name":"surrealdb-expert","source":"martinholovsky/claude-skills-generator","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Low Risk","critical":false},
+    {"name":"svelte-code-writer","source":"sveltejs/ai-tools","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Low Risk","critical":false},
     {"name":"svelte-core-bestpractices","source":"sveltejs/ai-tools","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Low Risk","critical":false},
     {"name":"typescript-expert","source":"sickn33/antigravity-awesome-skills","hasAssessment":true,"gen":"Safe","socket":"0 alerts","snyk":"Low Risk","critical":false}
   ]

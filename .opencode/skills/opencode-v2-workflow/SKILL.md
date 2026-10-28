@@ -17,13 +17,16 @@ or investigations. Do not add ceremony to a trivial, single-file change.
 1. Classify the request as `TRIVIAL`, `LOW`, `MEDIUM`, or `HIGH` from the
    supplied evidence. Mark architecture, contract, migration, security,
    schema, shared-state, and irreversible changes as risk signals.
-2. For `MEDIUM` or `HIGH`, find or create
-   `.opencode/state/plans/YYYYMMDD-<slug>.md`. Use `YYYYMMDD.md` only when one
-   active task per day is guaranteed.
-3. Before creating runtime state, ensure `.opencode/state/` is ignored. Prefer
-   an existing ignore rule; otherwise add `/.opencode/state/` to the local Git
-   exclude file rather than changing a tracked `.gitignore`. Do not hide files
-   that are already tracked.
+2. For `MEDIUM` or `HIGH`, use the Git worktree root as the project root,
+   even if the current directory is nested. Find or create the active plan at
+   `<worktree-root>/.opencode/state/plans/YYYYMMDD-<slug>.md` only. Do not use
+   `.opencode/plans/`, a global config directory, or a different plans folder.
+3. Before creating a plan, run `bash <skill-base>/scripts/prepare-plan.sh
+   YYYYMMDD-<slug>`, replacing `<skill-base>` with the base directory returned
+   by the skill tool. It verifies Git ignore rules and prints the absolute plan
+   path. Write the plan at that exact path. If it fails, report the failure and
+   do not create an unignored plan or choose another directory. For a non-Git
+   project, ask the user where to put the plan instead of guessing.
 4. Give each task one owner, explicit acceptance checks, dependencies, and a
    non-overlapping file boundary. Independent tasks may be delegated, but do
    not assume parallel execution unless the runtime reports it.

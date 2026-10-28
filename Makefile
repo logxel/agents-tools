@@ -23,3 +23,5 @@ skills-update:
 
 opencode-validate:
 	./.github/scripts/validate-opencode-addon.sh
+	python3 .github/tests/test-opencode-upgrade.py
+	python3 .github/tests/test-opencode-plan.py
