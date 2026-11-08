@@ -419,6 +419,18 @@ NODE
 fi
 done
 
+if [[ "$USER_MODE" == 1 ]]; then
+  if [[ "$CONFIG_MERGE_RUNTIME" == "python3" ]]; then
+    python3 "$ADDON_DIR/merge-instructions.py" \
+      "$TARGET_DIR/AGENTS.md" \
+      "$ADDON_DIR/instructions/dependency-installation.md"
+  else
+    "$CONFIG_MERGE_RUNTIME" "$ADDON_DIR/merge-instructions.js" \
+      "$TARGET_DIR/AGENTS.md" \
+      "$ADDON_DIR/instructions/dependency-installation.md"
+  fi
+fi
+
 if [[ "$ENABLE_AST_GREP" == 1 ]]; then
   printf 'Enabled AST-grep in merged OpenCode configuration\n'
 fi

@@ -35,6 +35,14 @@ project skill path; the backup retains the previous contents. Configuration
 merging uses Python 3 when available, with Node.js or Bun as fallbacks. For a
 global install or upgrade, run `bash .opencode/install.sh --user`.
 
+A user-wide install or upgrade also adds the managed dependency-installation
+guidance to `~/.config/opencode/AGENTS.md` (or `$XDG_CONFIG_HOME/opencode/AGENTS.md`).
+It preserves the rest of that file and refreshes only its marked addon section.
+This global guidance applies across projects and covers Python environments,
+npm, pnpm, Bun, and one-off CLI execution. A project-only install keeps the
+guidance file in the addon bundle and does not change the user's global
+instructions.
+
 ## 3. Use it
 
 The default `orchestrator` decides whether work needs a dated plan. You can
